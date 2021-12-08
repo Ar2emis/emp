@@ -1,0 +1,25 @@
+%div
+  %h1 EMP
+  %div
+    =form_with url: emp_path, local: false do |form|
+      %div
+        %div
+          =form.label :data_label, 'Select csv-file:'
+        %div
+          =form.file_field :data
+      %div
+        %div
+          =form.label :window_size_label, 'Enter window size (optional):'
+        %div
+          = form.number_field :window_size, step: :any
+      %div
+        %div
+          =form.label :window_size_label, 'Enter classes amount (optional):'
+        %div
+          = form.number_field :classes_amount
+      %div
+        =form.check_box :remove_anomalies
+        =form.label :remove_anomalies_label, 'Remove anomalies'
+      %div
+        =form.submit
+  %div#output

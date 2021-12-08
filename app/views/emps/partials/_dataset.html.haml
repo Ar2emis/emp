@@ -1,0 +1,145 @@
+%div#dataset
+  %div
+    %div
+      %h3 Data
+      %table
+        %thead
+          %tr
+            %th{colspan: @values.count + 1} Dataset
+          %tr
+            %th N: #{@values.count}
+            - @values.count.times do |column|
+              %th=column
+        %tbody
+          %tr
+            %td Original
+            - @values.each do |value|
+              %td=value
+          %tr
+            %td Sorted
+            - @sorted_values.each do |value|
+              %td=value
+      %h4 a: #{@anomalies_a}
+      %h4 b: #{@anomalies_b}
+      %div
+        =image_tag @anomalies_plot.html_safe
+
+  %div
+    %h3 Statistics
+    %table
+      %thead
+        %tr
+          %th
+          %th X
+          %th N
+          %th P
+          %th Empir
+      %tbody
+        - @statistics.each_with_index do |statistic, index|
+          %tr
+            %td=index
+            %td=statistic[:x].round(2)
+            %td=statistic[:n].round(2)
+            %td=statistic[:p].round(3)
+            %td=statistic[:empir].round(3)
+  %div
+    =image_tag @arrow_chart.html_safe
+  %div
+    %h4 M: #{@m}
+    %h4 h: #{@h.round(2)}
+  %div
+    %h3 Classes
+    %table
+      %thead
+        %tr
+          %th
+          %th Range
+          %th Amount
+          %th P
+          %th Empir
+      %tbody
+        - @class_statistics.each.with_index do |(klass, statistic), index|
+          %tr
+            %td=index
+            %td [#{klass.first.round(2)}; #{klass.last.round(2)}#{ index == @class_statistics.count.pred ? ']' : ')' }
+            %td=statistic[:n].round(2)
+            %td=statistic[:p].round(3)
+            %td=statistic[:empir].round(3)
+  %div
+    %h4 Window: #{@window.round(2)}
+    =image_tag @classes_gistogram.html_safe
+  %div
+    %table
+      %thead
+        %tr
+          %th
+          %th Value
+          %th STD
+          %th 95%
+      %tbody
+        %tr
+          %td Mean
+          %td=@global_statistics[:mean][:value].round(2)
+          %td=@global_statistics[:mean][:std].round(2)
+          %td [#{@global_statistics[:mean][:ninety_five].first.round(2)}; #{@global_statistics[:mean][:ninety_five].last.round(2)}]
+        %tr
+          %td Median
+          %td=@global_statistics[:median][:value].round(2)
+          %td -
+          %td [#{@global_statistics[:median][:ninety_five].first.round(2)}; #{@global_statistics[:median][:ninety_five].last.round(2)}]
+        %tr
+          %td STD
+          %td=@global_statistics[:std][:value].round(2)
+          %td=@global_statistics[:std][:std].round(2)
+          %td [#{@global_statistics[:std][:ninety_five].first.round(2)}; #{@global_statistics[:std][:ninety_five].last.round(2)}]
+        %tr
+          %td Asymmetry coefficient
+          %td=@global_statistics[:assymetry][:value].round(2)
+          %td=@global_statistics[:assymetry][:std].round(2)
+          %td [#{@global_statistics[:assymetry][:ninety_five].first.round(2)}; #{@global_statistics[:assymetry][:ninety_five].last.round(2)}]
+        %tr
+          %td Excess coefficient
+          %td=@global_statistics[:excess][:value].round(2)
+          %td=@global_statistics[:excess][:std].round(2)
+          %td [#{@global_statistics[:excess][:ninety_five].first.round(2)}; #{@global_statistics[:excess][:ninety_five].last.round(2)}]
+        %tr
+          %td Сounter-excess coefficient
+          %td=@global_statistics[:counter_excess][:value].round(2)
+          %td -
+          %td -
+        %tr
+          %td Minimum
+          %td=@global_statistics[:minimum][:value]
+          %td -
+          %td -
+        %tr
+          %td Maximum
+          %td=@global_statistics[:maximum][:value]
+          %td -
+          %td -
+  %div
+    =image_tag @empir_gist.html_safe
+    -# =image_tag @probability_distribution.html_safe
+  %div
+    %table
+      %thead
+        %tr
+          %th
+          %th Value
+          %th STD
+          %th 95%
+      %tbody
+        %tr
+          %td a
+          %td=@a.round(2)
+          %td=@std_a.round(2)
+          %td [#{@interval_a.first.round(2)};#{@interval_a.last.round(2)}]
+        %tr
+          %td b
+          %td=@b.round(2)
+          %td=@std_b.round(2)
+          %td [#{@interval_b.first.round(2)};#{@interval_b.last.round(2)}]
+  %div
+    =image_tag @new_classes_gistogram.html_safe
+  %div
+    =image_tag @probability_distribution.html_safe
