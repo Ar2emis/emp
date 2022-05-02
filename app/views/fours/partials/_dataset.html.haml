@@ -1,0 +1,150 @@
+%div#dataset
+  %div
+    %div
+      - @correlation_fields.each do |field|
+        =image_tag field.html_safe
+  %div
+    - if params[:part] == 'first'
+      - @global_statistics.each do |key, global_statistics|
+        %table
+          %thead
+            %tr
+              %th=key
+              %th Value
+              %th STD
+              %th 95%
+          %tbody
+            %tr
+              %td Mean
+              %td=global_statistics[:mean][:value].round(2)
+              %td=global_statistics[:mean][:std].round(2)
+              %td [#{global_statistics[:mean][:ninety_five].first.round(2)}; #{global_statistics[:mean][:ninety_five].last.round(2)}]
+            %tr
+              %td Median
+              %td=global_statistics[:median][:value].round(2)
+              %td -
+              %td [#{global_statistics[:median][:ninety_five].first.round(2)}; #{global_statistics[:median][:ninety_five].last.round(2)}]
+            %tr
+              %td STD
+              %td=global_statistics[:std][:value].round(2)
+              %td=global_statistics[:std][:std].round(2)
+              %td [#{global_statistics[:std][:ninety_five].first.round(2)}; #{global_statistics[:std][:ninety_five].last.round(2)}]
+            %tr
+              %td Asymmetry coefficient
+              %td=global_statistics[:assymetry][:value].round(2)
+              %td=global_statistics[:assymetry][:std].round(2)
+              %td [#{global_statistics[:assymetry][:ninety_five].first.round(2)}; #{global_statistics[:assymetry][:ninety_five].last.round(2)}]
+            %tr
+              %td Excess coefficient
+              %td=global_statistics[:excess][:value].round(2)
+              %td=global_statistics[:excess][:std].round(2)
+              %td [#{global_statistics[:excess][:ninety_five].first.round(2)}; #{global_statistics[:excess][:ninety_five].last.round(2)}]
+      %div
+        %table
+          %thead
+            %tr
+              %th Corelation coefficient
+              %th Assesment
+              %th 95%
+              %th Statistic
+              %th Quantile
+              %th Conclusion significance
+              %th Conclusion relationship
+          %tbody
+            %tr
+              %th Pearson
+              %th=@pearson[:value]
+              %th="[#{@pearson[:ninety_five].first.round(2)}; #{@pearson[:ninety_five].last.round(2)}]"
+              %th=@pearson[:statistic]
+              %th=@pearson[:quantile]
+              - if @pearson[:statistic].abs <= @pearson[:quantile]
+                %th Insignificant
+                %th No
+              - else
+                %th Significant
+                %th Yes
+            %tr
+              %th Spirmen
+              %th=@spirmen[:value]
+              %th -
+              %th=@spirmen[:statistic]
+              %th=@spirmen[:quantile]
+              - if @spirmen[:statistic].abs <= @spirmen[:quantile]
+                %th Insignificant
+                %th No
+              - else
+                %th Significant
+                %th Yes
+            %tr
+              %th Kendall
+              %th=@kendall[:value]
+              %th -
+              %th=@kendall[:statistic]
+              %th=@kendall[:quantile]
+              - if @kendall[:statistic].abs <= @kendall[:quantile]
+                %th Insignificant
+                %th No
+              - else
+                %th Significant
+                %th Yes
+            %tr
+              %th Corelation relation
+              %th=@corelation_relation[:value]
+              %th -
+              %th=@corelation_relation[:statistic]
+              %th=@corelation_relation[:quantile]
+              - if @corelation_relation[:statistic] <= @corelation_relation[:quantile]
+                %th Insignificant
+                %th No
+              - else
+                %th Significant
+                %th Yes
+      - if @corelation_pearson
+        %div
+          %table
+            %thead
+              %tr
+                %th Pearson assesment
+                %th Corelation relation assesment
+                %th Statistics
+                %th Quantile
+                %th Conclusion equality
+                %th Conclusion linearity
+            %tbody
+              %tr
+                %th=@pearson[:value]
+                %th=@corelation_relation[:value]
+                %th=@corelation_pearson
+                %th=@corelation_relation[:quantile]
+                - if @corelation_pearson <= @corelation_relation[:quantile]
+                  %th Yes
+                  %th Yes
+                - else
+                  %th No
+                  %th No
+    - else
+      %div
+        %table
+          %thead
+            %tr
+              %th
+              %th Assymetry
+              %th Excess
+          %tbody
+            - @assymetries.each_with_index do |assym, index|
+              %tr
+                %th=index.next
+                %th=assym
+                %th=@excesses[index]
+      -# %div
+      -#   -@classes_gistogram.each_with_index do |hist, index|
+      -#     %p=index.next
+      -#     =image_tag hist.html_safe
+      %div
+        %table
+          %thead
+          %tbody
+            - @matrix.each do |row|
+              %tr
+                - row.each do |col|
+                  %td=col[:value].round(2)

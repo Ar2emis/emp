@@ -36,9 +36,43 @@ class EmpsController < ApplicationController
     @probability_distribution = probability_distribution
     @new_classes_gistogram = new_classes_gistogram
     @empir_gist = empir_gist
+    @pearson = pearson
+    @x2 = @pearson.sum { |h| h[:x2] }
+    @theoretical_x2 = theoretical_x2
   end
 
   private
+
+  def theoretical_x2
+    v = @m - 1
+    # d = (-2.0637 * ((Math.log(0.95) - 0.16)**0.4274)) + 1.5774
+    d = (2.0637 * ((Math.log(1.to_f / 0.05) - 0.16)**0.4274)) - 1.5774
+    big_a = d * Math.sqrt(2)
+    big_b = 2.to_f / 3 * ((d**2) - 1)
+    big_c = d * ((d**2) - 7) / 9 / Math.sqrt(2)
+    big_d = ((6 * (d**4)) + (14 * (d**2)) - 32) / 405
+    big_e = d * ((9 * (d**4)) + (256 * (d**2)) - 433) / 4860 / Math.sqrt(2)
+
+    v + (big_a * Math.sqrt(v)) + big_b + (big_c / Math.sqrt(v)) + (big_d / v) + (big_e / v / Math.sqrt(v))
+  end
+
+  def pearson
+    @class_statistics.map do |klass, statistics|
+      theoretical_p = probability_func(klass.last) - probability_func(klass.first)
+      theoretical_n = @count * theoretical_p
+      { theoretical_p: theoretical_p,
+        theoretical_n: theoretical_n,
+        x2: theoretical_n.zero? ? 0 : (((statistics[:n] - theoretical_n)**2).to_f / theoretical_n) }
+    end
+  end
+
+  def probability_func(x)
+    if x < @a then 0
+    elsif x >= @b then 1
+    else
+      (x - @a).to_f / (@b - @a)
+    end
+  end
 
   def empir_gist
     PLT.scatter(@statistics.pluck(:x), @statistics.pluck(:empir))
@@ -84,6 +118,7 @@ class EmpsController < ApplicationController
         (x - @a).to_f / (@b - @a)
       end
     }
+    PLT.scatter(@statistics.pluck(:x), @statistics.pluck(:empir))
     PLT.scatter(@values, @values.map(&f))
     PLT.ylabel = 'Empir'
     PLT.xlabel = 'x'

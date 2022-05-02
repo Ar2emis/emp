@@ -1,0 +1,10 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "source_python",
+      "type": "shell",
+      "command": "source ${workspaceRoot}/venv/bin/activate"
+    }
+  ]
+}

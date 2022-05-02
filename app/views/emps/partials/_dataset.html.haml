@@ -143,3 +143,25 @@
     =image_tag @new_classes_gistogram.html_safe
   %div
     =image_tag @probability_distribution.html_safe
+  %div
+    %h3 Pearson
+    %table
+      %thead
+        %tr
+          %th Class
+          %th Theoretical P
+          %th Theoretical N
+          %th X2
+      %tbody
+        - @pearson.each.with_index do |statistic, index|
+          %tr
+            %td=index + 1
+            %td=statistic[:theoretical_p].round(3)
+            %td=statistic[:theoretical_n].round(2)
+            %td=statistic[:x2].round(2)
+    %h4 X2: #{@x2.round(2)}
+    %h4 Theoretical X2: #{@theoretical_x2.round(2)}
+    - if @x2 <= @theoretical_x2
+      %p Достоверное распределение
+    - else
+      %p Недостоверное распределение

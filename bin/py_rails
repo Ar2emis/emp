@@ -1,0 +1,4 @@
+#!/bin/bash
+
+source /home/ar2emis/some_stuff/emp/venv/bin/activate
+./rails s

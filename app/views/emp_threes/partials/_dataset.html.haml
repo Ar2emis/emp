@@ -1,0 +1,411 @@
+%div#dataset
+  %div
+    %h1 Lab 3
+    %div
+      %table
+        %thead
+          %tr
+            %th
+            %th Normaltest p value
+            %th Image
+        %tbody
+          - if @data[:p_first]
+            %tr
+              %th First
+              %th=@data[:p_first]
+              %th=image_tag @data[:statistics][:first][:image].html_safe
+            %tr
+              %th Second
+              %th=@data[:p_second]
+              %th=image_tag @data[:statistics][:second][:image].html_safe
+          - else
+            %tr
+              %th Difference
+              %th=@data[:p_diff]
+              %th=image_tag @data[:statistics][:first][:image].html_safe
+    %div
+      %table
+        %thead
+          %tr
+            %th
+            %th Mean
+            %th Mean Interval
+            %th Median
+            %th Median Interval
+        %tbody
+          %tr
+            %th First
+            %th=@data[:statistics][:first][:mean].round(3)
+            %th [#{@data[:statistics][:first][:mean_interval].first.round(3)}; #{@data[:statistics][:first][:mean_interval].last.round(3)}]
+            %th=@data[:statistics][:first][:median]&.round(3) || '-'
+            %th [#{@data[:statistics][:first][:median_interval]&.first&.round(3) || '-'}; #{@data[:statistics][:first][:median_interval]&.last&.round(3) || '-'}]
+          - if @data[:statistics][:second]
+            %tr
+              %th Second
+              %th=@data[:statistics][:second][:mean].round(3)
+              %th [#{@data[:statistics][:second][:mean_interval].first.round(3)}; #{@data[:statistics][:second][:mean_interval].last.round(3)}]
+              %th=@data[:statistics][:second][:median]&.round(3) || '-'
+              %th [#{@data[:statistics][:second][:median_interval]&.first&.round(3) || '-'}; #{@data[:statistics][:second][:median_interval]&.last&.round(3) || '-'}]
+    %div
+      %h3 F test
+      %table
+        %thead
+          %tr
+            %th f
+            %th p
+            %th p >= 0.05
+        %tbody
+          %tr
+            %th=@data[:f_test][:f].round(3)
+            %th=@data[:f_test][:p]
+            %th=@data[:f_test][:answer]
+    %div
+      %h3 Math Expectation
+      - if @data[:math_expect][:t]
+        %table
+          %thead
+            %tr
+              %th t
+              %th p
+              %th p >= 0.05
+          %tbody
+            %tr
+              %th=@data[:math_expect][:t].round(3)
+              %th=@data[:math_expect][:p]
+              %th=@data[:math_expect][:answer]
+      - else
+        %table
+          %thead
+            %tr
+              %th w
+              %th u
+              %th p
+              %th p >= 0.05
+          %tbody
+            %tr
+              %th=@data[:math_expect][:w].round(3)
+              %th=@data[:math_expect][:u].round(3)
+              %th=@data[:math_expect][:p]
+              %th=@data[:math_expect][:answer]
+  %div
+    %h1 Task 1
+    %h4 Выборки независимые
+    %div
+      %table
+        %thead
+          %tr
+            %th
+            %th Normaltest p value
+            %th Image
+        %tbody
+          %tr
+            %th DRA
+            %th=@first_task[:p_dra].round(3)
+            %th=image_tag @first_task[:statistics][:dra][:image].html_safe
+          %tr
+            %th SC
+            %th=@first_task[:p_sc].round(3)
+            %th=image_tag @first_task[:statistics][:sc][:image].html_safe
+      %h4 p >= 0.05, а значит нет оснований отклонять гипотезу, что эти выборки нормальные
+    %div
+      %table
+        %thead
+          %tr
+            %th
+            %th Mean
+            %th Interval
+        %tbody
+          %tr
+            %th DRA
+            %th=@first_task[:statistics][:dra][:mean].round(3)
+            %th [#{@first_task[:statistics][:dra][:interval].first.round(3)}; #{@first_task[:statistics][:dra][:interval].last.round(3)}]
+          %tr
+            %th SC
+            %th=@first_task[:statistics][:sc][:mean].round(3)
+            %th [#{@first_task[:statistics][:sc][:interval].first.round(3)}; #{@first_task[:statistics][:sc][:interval].last.round(3)}]
+    %div
+      %h3 F test
+      %table
+        %thead
+          %tr
+            %th f
+            %th p
+            %th p >= 0.05
+        %tbody
+          %tr
+            %th=@first_task[:f_test][:f].round(3)
+            %th=@first_task[:f_test][:p].round(3)
+            %th=@first_task[:f_test][:answer]
+      %h4 Гипотеза о равенстве дисперсий отклонена в сторону гипотезы о неравенстве
+    %div
+      %h3 Welch two sample t test
+      %table
+        %thead
+          %tr
+            %th t
+            %th p
+            %th p >= 0.05
+        %tbody
+          %tr
+            %th=@first_task[:welch_two_sample_t_test][:t].round(3)
+            %th=@first_task[:welch_two_sample_t_test][:p].round(3)
+            %th=@first_task[:welch_two_sample_t_test][:answer]
+      %h4 Гипотеза о равенстве математических ожиданий отклонена в сторону гипотезы о неравенстве
+  %div
+    %h1 Task 2, mortality
+    %h4 Выборки независимые
+    %div
+      %table
+        %thead
+          %tr
+            %th
+            %th Normaltest p value
+            %th Image
+        %tbody
+          %tr
+            %th South
+            %th=@second_mortality_task[:p_south].round(3)
+            %th=image_tag @second_mortality_task[:statistics][:south][:image].html_safe
+          %tr
+            %th North
+            %th=@second_mortality_task[:p_north].round(3)
+            %th=image_tag @second_mortality_task[:statistics][:north][:image].html_safe
+      %h4 p >= 0.05, а значит нет оснований отклонять гипотезу, что эти выборки нормальные
+    %div
+      %table
+        %thead
+          %tr
+            %th
+            %th Mean
+            %th Interval
+        %tbody
+          %tr
+            %th South
+            %th=@second_mortality_task[:statistics][:south][:mean].round(3)
+            %th [#{@second_mortality_task[:statistics][:south][:interval].first.round(3)}; #{@second_mortality_task[:statistics][:south][:interval].last.round(3)}]
+          %tr
+            %th North
+            %th=@second_mortality_task[:statistics][:north][:mean].round(3)
+            %th [#{@second_mortality_task[:statistics][:north][:interval].first.round(3)}; #{@second_mortality_task[:statistics][:north][:interval].last.round(3)}]
+    %div
+      %h3 F test
+      %table
+        %thead
+          %tr
+            %th f
+            %th p
+            %th p >= 0.05
+        %tbody
+          %tr
+            %th=@second_mortality_task[:f_test][:f].round(3)
+            %th=@second_mortality_task[:f_test][:p].round(3)
+            %th=@second_mortality_task[:f_test][:answer]
+      -# %h4 Гипотеза о равенстве дисперсий отклонена в сторону гипотезы о неравенстве
+      %h4 Нельзя отклонять гипотезу о равенстве дисперсий
+    %div
+      %h3 Two sample t test
+      %table
+        %thead
+          %tr
+            %th t
+            %th p
+            %th p >= 0.05
+        %tbody
+          %tr
+            %th=@second_mortality_task[:two_sample_t_test][:t].round(3)
+            %th=@second_mortality_task[:two_sample_t_test][:p]
+            %th=@second_mortality_task[:two_sample_t_test][:answer]
+      %h4 Гипотеза о равенстве математических ожиданий отклонена в сторону гипотезы о неравенстве
+  %div
+    %h1 Task 2, hardness
+    %h4 Выборки независимые
+    %div
+      %table
+        %thead
+          %tr
+            %th
+            %th Normaltest p value
+            %th Image
+        %tbody
+          %tr
+            %th South
+            %th=@second_hardness_task[:p_south].round(3)
+            %th=image_tag @second_hardness_task[:statistics][:south][:image].html_safe
+          %tr
+            %th North
+            %th=@second_hardness_task[:p_north].round(3)
+            %th=image_tag @second_hardness_task[:statistics][:north][:image].html_safe
+      %h4 p < 0.05, а значит гипотеза, что эти выборки нормальные, отклонена в сторону гипотезы о ненормальности
+    %div
+      %table
+        %thead
+          %tr
+            %th
+            %th Mean
+            %th Mean Interval
+            %th Median
+            %th Median Interval
+        %tbody
+          %tr
+            %th South
+            %th=@second_hardness_task[:statistics][:south][:mean].round(3)
+            %th [#{@second_hardness_task[:statistics][:south][:mean_interval].first.round(3)}; #{@second_hardness_task[:statistics][:south][:mean_interval].last.round(3)}]
+            %th=@second_hardness_task[:statistics][:south][:median].round(3)
+            %th [#{@second_hardness_task[:statistics][:south][:median_interval].first.round(3)}; #{@second_hardness_task[:statistics][:south][:median_interval].last.round(3)}]
+          %tr
+            %th North
+            %th=@second_hardness_task[:statistics][:north][:mean].round(3)
+            %th [#{@second_hardness_task[:statistics][:north][:mean_interval].first.round(3)}; #{@second_hardness_task[:statistics][:north][:mean_interval].last.round(3)}]
+            %th=@second_hardness_task[:statistics][:north][:median].round(3)
+            %th [#{@second_hardness_task[:statistics][:north][:median_interval].first.round(3)}; #{@second_hardness_task[:statistics][:north][:median_interval].last.round(3)}]
+    %div
+      %h3 Wilcoxon rank sums test
+      %table
+        %thead
+          %tr
+            %th w
+            %th u
+            %th p
+            %th p >= 0.05
+        %tbody
+          %tr
+            %th=@second_hardness_task[:wilcoxon_rank_sums_test][:w].round(3)
+            %th=@second_hardness_task[:wilcoxon_rank_sums_test][:u].round(3)
+            %th=@second_hardness_task[:wilcoxon_rank_sums_test][:p]
+            %th=@second_hardness_task[:wilcoxon_rank_sums_test][:answer]
+      -# %h4 Гипотеза о равенстве математических ожиданий отклонена в сторону гипотезы о неравенстве
+      %h4 Нельзя отклонять гипотезу о равенстве математических ожиданий
+  %div
+    %h1 Task 3
+    %h4 Выборки зависимые
+    %div
+      %table
+        %thead
+          %tr
+            %th Normaltest p value
+            %th Image
+        %tbody
+          %tr
+            %th=@third_task[:p_diff].round(3)
+            %th=image_tag @third_task[:statistics][:diff][:image].html_safe
+      %h4 p >= 0.05, а значит нет оснований отклонять гипотезу, что эти выборки нормальные
+    %div
+      %table
+        %thead
+          %tr
+            %th
+            %th Mean
+            %th Mean Interval
+        %tbody
+          %tr
+            %th Difference
+            %th=@third_task[:statistics][:diff][:mean].round(3)
+            %th [#{@third_task[:statistics][:diff][:interval].first.round(3)}; #{@third_task[:statistics][:diff][:interval].last.round(3)}]
+          %tr
+            %th Placebo
+            %th=@third_task[:statistics][:placebo][:mean].round(3)
+            %th [#{@third_task[:statistics][:placebo][:interval].first.round(3)}; #{@third_task[:statistics][:placebo][:interval].last.round(3)}]
+          %tr
+            %th Methylphenidate
+            %th=@third_task[:statistics][:methylphenidate][:mean].round(3)
+            %th [#{@third_task[:statistics][:methylphenidate][:interval].first.round(3)}; #{@third_task[:statistics][:methylphenidate][:interval].last.round(3)}]
+    %div
+      %h3 F test
+      %table
+        %thead
+          %tr
+            %th f
+            %th p
+            %th p >= 0.05
+        %tbody
+          %tr
+            %th=@third_task[:f_test][:f].round(3)
+            %th=@third_task[:f_test][:p].round(3)
+            %th=@third_task[:f_test][:answer]
+      %h4 Нельзя отклонять гипотезу о равенстве дисперсий
+    %div
+      %h3 Paried t test
+      %table
+        %thead
+          %tr
+            %th t
+            %th p
+            %th p >= 0.05
+        %tbody
+          %tr
+            %th=@third_task[:paried_t_test][:t].round(3)
+            %th=@third_task[:paried_t_test][:p].round(3)
+            %th=@third_task[:paried_t_test][:answer]
+      %h4 Гипотеза о равенстве математических ожиданий отклонена в сторону гипотезы о неравенстве
+      -# %h4 Нельзя отклонять гипотезу о равенстве математических ожиданий
+  %div
+    %h1 Task 4
+    %h4 Выборки независимые
+    %div
+      %table
+        %thead
+          %tr
+            %th
+            %th Normaltest p value
+            %th Image
+        %tbody
+          %tr
+            %th Shardone
+            %th=@fourth_task[:p_shardone].round(3)
+            %th=image_tag @fourth_task[:statistics][:shardone][:image].html_safe
+          %tr
+            %th Kaberne
+            %th=@fourth_task[:p_kaberne].round(3)
+            %th=image_tag @fourth_task[:statistics][:kaberne][:image].html_safe
+      %h4 p >= 0.05, а значит нет оснований отклонять гипотезу, что эти выборки нормальные
+    %div
+      %table
+        %thead
+          %tr
+            %th
+            %th Mean
+            %th Mean Interval
+            %th Median
+            %th Median Interval
+        %tbody
+          %tr
+            %th Shardone
+            %th=@fourth_task[:statistics][:shardone][:mean].round(3)
+            %th [#{@fourth_task[:statistics][:shardone][:mean_interval].first.round(3)}; #{@fourth_task[:statistics][:shardone][:mean_interval].last.round(3)}]
+            %th=@fourth_task[:statistics][:shardone][:median].round(3)
+            %th [#{@fourth_task[:statistics][:shardone][:median_interval].first.round(3)}; #{@fourth_task[:statistics][:shardone][:median_interval].last.round(3)}]
+          %tr
+            %th Kaberne
+            %th=@fourth_task[:statistics][:kaberne][:mean].round(3)
+            %th [#{@fourth_task[:statistics][:kaberne][:mean_interval].first.round(3)}; #{@fourth_task[:statistics][:kaberne][:mean_interval].last.round(3)}]
+            %th=@fourth_task[:statistics][:kaberne][:median].round(3)
+            %th [#{@fourth_task[:statistics][:kaberne][:median_interval].first.round(3)}; #{@fourth_task[:statistics][:kaberne][:median_interval].last.round(3)}]
+    %div
+      %h3 F test
+      %table
+        %thead
+          %tr
+            %th f
+            %th p
+            %th p >= 0.05
+        %tbody
+          %tr
+            %th=@fourth_task[:f_test][:f].round(3)
+            %th=@fourth_task[:f_test][:p].round(3)
+            %th=@fourth_task[:f_test][:answer]
+      %h4 Нельзя отклонять гипотезу о равенстве дисперсий
+    %div
+      %h3 Paried t test
+      %table
+        %thead
+          %tr
+            %th t
+            %th p
+            %th p >= 0.05
+        %tbody
+          %tr
+            %th=@fourth_task[:paried_t_test][:t].round(3)
+            %th=@fourth_task[:paried_t_test][:p].round(3)
+            %th=@fourth_task[:paried_t_test][:answer]
+      -# %h4 Гипотеза о равенстве математических ожиданий отклонена в сторону гипотезы о неравенстве
+      %h4 Нельзя отклонять гипотезу о равенстве математических ожиданий

@@ -18,3 +18,11 @@ Style/Documentation:
 Metrics/BlockLength:
   Exclude:
     - 'spec/**/*.rb'
+
+Metrics/AbcSize:
+  Exclude:
+    - 'app/controllers/*'
+
+Metrics/MethodLength:
+  Exclude:
+    - 'app/controllers/*'

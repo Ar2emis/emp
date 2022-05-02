@@ -1,0 +1,15 @@
+%div
+  %h1 EMP
+  %div
+    =form_with url: emp_three_path, local: false do |form|
+      %div
+        %div
+          =form.label :data_label, 'Select first file:'
+        %div
+          =form.file_field :data
+      %div
+        =form.check_box :independent
+        =form.label :independent_label, 'Independet?'
+      %div
+        =form.submit 'Start'
+  %div#output
