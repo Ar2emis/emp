@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class FoursController < ApplicationController
+class CorellationsController < ApplicationController
   PLT = Matplotlib::Pyplot
   U = 1.96
 
