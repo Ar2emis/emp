@@ -12,11 +12,8 @@
           =form.label :part_label, 'Многомерные данные:', class: 'form-label'
         %div
           .form-check
-            =form.radio_button :part, 'first', class: 'form-check-input', checked: true
-            =form.label :part_second, 'Нет', class: 'form-label'
-          .form-check
-            =form.radio_button :part, 'second', class: 'form-check-input'
-            =form.label :part_second, 'Да', class: 'form-label'
+            =form.check_box :dimensions, { class: 'form-check-input' }, '1', ''
+            =form.label :dimension, 'Многомерные данные', class: 'form-label'
       %div
         =form.submit 'Отправить', class: 'btn btn-primary'
   %div#output

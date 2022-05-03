@@ -7,68 +7,51 @@ class CorellationsController < ApplicationController
   def index; end
 
   def create
-    @dataset = Pandas.read_csv(emp_params[:data].path, header: nil, sep: '\s+')
-    @dataset_values = @dataset.values.to_a
-    @column_count = @dataset_values.first.count
-    @count = @dataset_values.count
+    @df = Pandas.read_csv(emp_params[:data].path, header: nil, sep: '\s+')
+    @df_values = @df.values.to_a
+    @column_count = @df_values.first.count
+    @count = @df_values.count
     @correlation_fields = []
-    send(params[:part])
+    params[:dimensions].blank? ? simple : complex
   end
 
   private
 
-  def first
-    @dataset_x = @dataset_values.map(&:first)
-    @dataset_y = @dataset_values.map(&:last)
+  def simple
+    @df_x = @df_values.map(&:first)
+    @df_y = @df_values.map(&:last)
     @correlation_fields << correlation_field('x', 'y')
-    @global_statistics = { x: global_statistics(@dataset_x),
-                           y: global_statistics(@dataset_y) }
-    @pearson = pearson(@dataset_x, @dataset_y)
+    @statistics = { x: statistics(@df_x), y: statistics(@df_y) }
+    @pearson = pearson(@df_x, @df_y)
     @spirmen = spirmen
     @kendall = kendall
     @corelation_relation = corelation_relation
     @corelation_pearson = @corelation_relation[:statistic].abs > @corelation_relation[:quantile] ? corelation_pearson : nil
   end
 
-  def second
-    @dataset[3] = Pandas.to_numeric(@dataset[3], errors: 'coerce')
-    @dataset = @dataset[@dataset[3].notnull].drop(8, axis: 1)
-    @dataset_values = @dataset.values.to_a
-    @column_count = @dataset_values.first.count
-    @matrix = []
-    @assymetries = []
-    @excesses = []
-    (0...@column_count).each do |i|
-      @matrix[i] = []
-      (0...@column_count).each do |j|
-        next @matrix[i][j] = { value: 1 } if i == j
+  def complex
+    @df[3] = Pandas.to_numeric(@df[3], errors: 'coerce')
+    @df = @df[@df[3].notnull].drop(8, axis: 1)
+    @df_values = @df.values.to_a
+    @column_count = @df_values.first.count
+    @statistics = {}
+    @matrix = Array.new(@column_count) do |index|
+      @df_x = @df[index].to_a
+      @statistics[index.next] = statistics(@df_x)
 
-        @dataset_x = @dataset[i].to_a
-        @dataset_y = @dataset[j].to_a
-        @correlation_fields << correlation_field(i.next, j.next)
+      Array.new(@column_count) do |jndex|
+        next { value: 1 } if index == jndex
+
+        @df_y = @df[jndex].to_a
+        @correlation_fields << correlation_field(index.next, jndex.next)
         @corelation_relation = corelation_relation
-        @matrix[i][j] = @corelation_relation[:statistic].abs > @corelation_relation[:quantile] ? @corelation_relation : { value: 0 }
+        @corelation_relation[:statistic].abs > @corelation_relation[:quantile] ? @corelation_relation : { value: 0 }
       end
-      @assymetries << assymetry
-      @excesses << excess
     end
   end
 
-  def assymetry
-    mean = @dataset_x.sum.to_f / @count
-    std_moved = Math.sqrt(@dataset_x.sum { |value| (value - mean)**2 }.to_f / @count)
-    (Math.sqrt(@count * @count.pred) / (@count - 2)) * (@dataset_x.sum { |value| (value - mean)**3 }.to_f / @count / (std_moved**3))
-  end
-
-  def excess
-    mean = @dataset_x.sum.to_f / @count
-    std_moved = Math.sqrt(@dataset_x.sum { |value| (value - mean)**2 }.to_f / @count)
-    excess_moved = (@dataset_x.sum { |value| (value - mean)**4 }.to_f / @count / (std_moved**4)) - 3
-    ((@count**2).pred.to_f / (@count - 2) / (@count - 3)) * (excess_moved + (6.0 / @count.next))
-  end
-
   def correlation_field(x, y) # rubocop:disable Naming/MethodParameterName
-    PLT.scatter(@dataset_x, @dataset_y)
+    PLT.scatter(@df_x, @df_y)
     PLT.ylabel(y)
     PLT.xlabel(x)
     plot_image
@@ -76,7 +59,7 @@ class CorellationsController < ApplicationController
 
   # rubocop:disable Layout/LineLength
 
-  def global_statistics(values)
+  def statistics(values)
     mean = values.sum.to_f / @count
     sorted_values = values.sort
     median = (sorted_values[(sorted_values.size.pred / 2)] + sorted_values[sorted_values.size / 2]).to_f / 2
@@ -126,8 +109,8 @@ class CorellationsController < ApplicationController
   end
 
   def spirmen
-    ranks_x = ranks(@dataset_x)
-    ranks_y = ranks(@dataset_y)
+    ranks_x = ranks(@df[0])
+    ranks_y = ranks(@df[1])
     ranks_different = ranks_x.map.with_index { |rank, index| (rank - ranks_y[index])**2 }.sum.to_f
     nn2_1 = (@count * ((@count**2) - 1)).to_f # rubocop:disable Naming/VariableNumber
     r = if ranks_x.uniq.count == @count && ranks_y.uniq.count == @count # !!!
@@ -146,8 +129,8 @@ class CorellationsController < ApplicationController
   end
 
   def kendall
-    ranks_x = ranks(@dataset_x)
-    ranks_y = ranks(@dataset_y)
+    ranks_x = ranks(@df[0])
+    ranks_y = ranks(@df[1])
     ranks = ranks_x.zip(ranks_y).sort_by(&:first)
     ranks_x = ranks.map(&:first)
     ranks_y = ranks.map(&:last)
@@ -190,8 +173,8 @@ class CorellationsController < ApplicationController
 
   def corelation_relation
     k = 1 + (1.44 * Math.log(@count)).round
-    h = (@dataset_x.max - @dataset_x.min) / k
-    x_sort = @dataset_x.sort
+    h = (@df_x.max - @df_x.min) / k
+    x_sort = @df_x.sort
     classes = Array.new(k) do |index|
       klass = [x_sort.first + (index * h), x_sort.first + (index.next * h)]
       index == k.pred ? (klass.first..klass.last) : (klass.first...klass.last)
@@ -199,7 +182,7 @@ class CorellationsController < ApplicationController
     @classes_x = Array.new(k) { [] }
     @classes_y = Array.new(k) { [] }
     classes.each_with_index do |klass, index|
-      @dataset_x.zip(@dataset_y).each do |x, y|
+      @df_x.zip(@df_y).each do |x, y|
         if klass.cover?(x)
           @classes_x[index] << x
           @classes_y[index] << y
@@ -252,21 +235,15 @@ class CorellationsController < ApplicationController
   end
 
   def ranks(values)
-    ranks = (1..@count).to_a
-    sort = values.sort
-    values.map do |elem|
-      count = sort.count(elem)
-      indicies = (0..@count.pred).select { |i| sort[i] == elem }
-      indicies.sum { |i| ranks[i] }.to_f / count
-    end
+    values.rank.to_a
   end
 
   def equal_ranks(ranks)
-    ranks.uniq.map { |v| [v, ranks.count(v)] }.select { |_, count| count > 1 } # x, Aj || y, Bk
+    ranks.uniq.map { |v| [v, ranks.count(v)] }.select { |_, count| count > 1 }
   end
 
   def emp_params
-    params.permit(:data, :part)
+    params.permit(:data, :dimensions)
   end
 
   def plot_image

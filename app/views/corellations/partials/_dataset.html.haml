@@ -2,47 +2,47 @@
   %div
     %div
       - @correlation_fields.each_slice(7).with_index do |fields, index|
-        -if params[:part] != 'first'
+        -if params[:dimensions].present?
           %h2.text-center.my-4=index.next
         - fields.each do |field|
           %div
             =image_tag field.html_safe, class: 'img-fluid mx-auto d-block mt-4 img-thumbnail border-3'
   %div
-    - if params[:part] == 'first'
-      - @global_statistics.each do |key, global_statistics|
-        %table.table.table-striped.m-auto.mt-4.w-75.border.text-center
-          %thead.table-dark
-            %tr
-              %th=key
-              %th Значеніе
-              %th СКО
-              %th 95%
-          %tbody
-            %tr
-              %td Среднее
-              %td=global_statistics[:mean][:value].round(2)
-              %td=global_statistics[:mean][:std].round(2)
-              %td [#{global_statistics[:mean][:ninety_five].first.round(2)}; #{global_statistics[:mean][:ninety_five].last.round(2)}]
-            %tr
-              %td Медиана
-              %td=global_statistics[:median][:value].round(2)
-              %td -
-              %td [#{global_statistics[:median][:ninety_five].first.round(2)}; #{global_statistics[:median][:ninety_five].last.round(2)}]
-            %tr
-              %td СКО
-              %td=global_statistics[:std][:value].round(2)
-              %td=global_statistics[:std][:std].round(2)
-              %td [#{global_statistics[:std][:ninety_five].first.round(2)}; #{global_statistics[:std][:ninety_five].last.round(2)}]
-            %tr
-              %td Коэффициент Асимметрии
-              %td=global_statistics[:assymetry][:value].round(2)
-              %td=global_statistics[:assymetry][:std].round(2)
-              %td [#{global_statistics[:assymetry][:ninety_five].first.round(2)}; #{global_statistics[:assymetry][:ninety_five].last.round(2)}]
-            %tr
-              %td Коэффициент Эксцесса
-              %td=global_statistics[:excess][:value].round(2)
-              %td=global_statistics[:excess][:std].round(2)
-              %td [#{global_statistics[:excess][:ninety_five].first.round(2)}; #{global_statistics[:excess][:ninety_five].last.round(2)}]
+    - @statistics.each do |key, statistics|
+      %table.table.table-striped.m-auto.mt-4.w-75.border.text-center
+        %thead.table-dark
+          %tr
+            %th=key
+            %th Значеніе
+            %th СКО
+            %th 95%
+        %tbody
+          %tr
+            %td Среднее
+            %td=statistics[:mean][:value].round(2)
+            %td=statistics[:mean][:std].round(2)
+            %td [#{statistics[:mean][:ninety_five].first.round(2)}; #{statistics[:mean][:ninety_five].last.round(2)}]
+          %tr
+            %td Медиана
+            %td=statistics[:median][:value].round(2)
+            %td -
+            %td [#{statistics[:median][:ninety_five].first.round(2)}; #{statistics[:median][:ninety_five].last.round(2)}]
+          %tr
+            %td СКО
+            %td=statistics[:std][:value].round(2)
+            %td=statistics[:std][:std].round(2)
+            %td [#{statistics[:std][:ninety_five].first.round(2)}; #{statistics[:std][:ninety_five].last.round(2)}]
+          %tr
+            %td Коэффициент Асимметрии
+            %td=statistics[:assymetry][:value].round(2)
+            %td=statistics[:assymetry][:std].round(2)
+            %td [#{statistics[:assymetry][:ninety_five].first.round(2)}; #{statistics[:assymetry][:ninety_five].last.round(2)}]
+          %tr
+            %td Коэффициент Эксцесса
+            %td=statistics[:excess][:value].round(2)
+            %td=statistics[:excess][:std].round(2)
+            %td [#{statistics[:excess][:ninety_five].first.round(2)}; #{statistics[:excess][:ninety_five].last.round(2)}]
+    - if params[:dimensions].blank?
       %div
         %table.table.table-striped.m-auto.mt-4.w-75.border.text-center
           %thead.table-dark
@@ -127,19 +127,6 @@
                   %th Нет
                   %th Нет
     - else
-      %div
-        %table.table.table-striped.m-auto.mt-4.w-75.border.text-center
-          %thead.table-dark
-            %tr
-              %th
-              %th Асимметрия
-              %th Эксцесс
-          %tbody
-            - @assymetries.each_with_index do |assym, index|
-              %tr
-                %th=index.next
-                %th=assym
-                %th=@excesses[index]
       %div
         %table.table.table-striped.m-auto.mt-4.w-75.border.mb-4.text-center
           %thead.table-dark
