@@ -20,7 +20,7 @@ class CorellationsController < ApplicationController
   def simple
     @df_x = @df_values.map(&:first)
     @df_y = @df_values.map(&:last)
-    @correlation_fields << correlation_field('x', 'y')
+    @correlation_fields << correlation_field_plot('x', 'y')
     @statistics = { x: statistics(@df_x), y: statistics(@df_y) }
     @pearson = pearson(@df_x, @df_y)
     @spirmen = spirmen
@@ -43,14 +43,14 @@ class CorellationsController < ApplicationController
         next { value: 1 } if index == jndex
 
         @df_y = @df[jndex].to_a
-        @correlation_fields << correlation_field(index.next, jndex.next)
+        @correlation_fields << correlation_field_plot(index.next, jndex.next)
         @corelation_relation = corelation_relation
         @corelation_relation[:statistic].abs > @corelation_relation[:quantile] ? @corelation_relation : { value: 0 }
       end
     end
   end
 
-  def correlation_field(x, y) # rubocop:disable Naming/MethodParameterName
+  def correlation_field_plot(x, y) # rubocop:disable Naming/MethodParameterName
     PLT.scatter(@df_x, @df_y)
     PLT.ylabel(y)
     PLT.xlabel(x)
