@@ -7,8 +7,8 @@ class FoursController < ApplicationController
   def index; end
 
   def create
-    @dataset = Pandas.read_csv(emp_params[:data].path, header: nil)
-    @dataset_values = @dataset.values.to_a.flatten.map { |s| s.gsub("\t\"", '   ').delete('\"').split(/ {2,}/) }
+    @dataset = Pandas.read_csv(emp_params[:data].path, header: nil, sep: '\s+')
+    @dataset_values = @dataset.values.to_a
     @column_count = @dataset_values.first.count
     @count = @dataset_values.count
     @correlation_fields = []
@@ -18,8 +18,8 @@ class FoursController < ApplicationController
   private
 
   def first
-    @dataset_x = @dataset_values.map(&:first).map(&:to_f)
-    @dataset_y = @dataset_values.map(&:last).map(&:to_f)
+    @dataset_x = @dataset_values.map(&:first)
+    @dataset_y = @dataset_values.map(&:last)
     @correlation_fields << correlation_field('x', 'y')
     @global_statistics = { x: global_statistics(@dataset_x),
                            y: global_statistics(@dataset_y) }
@@ -27,21 +27,27 @@ class FoursController < ApplicationController
     @spirmen = spirmen
     @kendall = kendall
     @corelation_relation = corelation_relation
-    @corelation_pearson = @spirmen[:statistic].abs > @spirmen[:quantile] ? corelation_pearson : nil
+    @corelation_pearson = @corelation_relation[:statistic].abs > @corelation_relation[:quantile] ? corelation_pearson : nil
   end
 
   def second
+    @dataset[3] = Pandas.to_numeric(@dataset[3], errors: 'coerce')
+    @dataset = @dataset[@dataset[3].notnull].drop(8, axis: 1)
+    @dataset_values = @dataset.values.to_a
+    @column_count = @dataset_values.first.count
     @matrix = []
     @assymetries = []
     @excesses = []
-    (0...(@column_count.pred)).each do |i|
+    (0...@column_count).each do |i|
       @matrix[i] = []
-      (0...@column_count.pred).each do |j|
-        @dataset_x = @dataset_values.map { |arr| arr[i].to_f }
-        @dataset_y = @dataset_values.map { |arr| arr[j].to_f }
+      (0...@column_count).each do |j|
+        next @matrix[i][j] = { value: 1 } if i == j
+
+        @dataset_x = @dataset[i].to_a
+        @dataset_y = @dataset[j].to_a
         @correlation_fields << correlation_field(i.next, j.next)
-        # @matrix[i][j] = send(%w[spirmen kendall corelation_relation].sample)
-        @matrix[i][j] = i == j ? { value: 1.0 } : corelation_relation
+        @corelation_relation = corelation_relation
+        @matrix[i][j] = @corelation_relation[:statistic].abs > @corelation_relation[:quantile] ? @corelation_relation : { value: 0 }
       end
       @assymetries << assymetry
       @excesses << excess
@@ -51,18 +57,14 @@ class FoursController < ApplicationController
   def assymetry
     mean = @dataset_x.sum.to_f / @count
     std_moved = Math.sqrt(@dataset_x.sum { |value| (value - mean)**2 }.to_f / @count)
-    assymetry = (Math.sqrt(@count * @count.pred) / (@count - 2)) * (@dataset_x.sum { |value| (value - mean)**3 }.to_f / @count / (std_moved**3))
-    # assymetry_std = Math.sqrt((6 * @count * @count.pred).to_f / ((@count - 2) * @count.next * (@count + 3)))
-    # assymetry / assymetry_std
+    (Math.sqrt(@count * @count.pred) / (@count - 2)) * (@dataset_x.sum { |value| (value - mean)**3 }.to_f / @count / (std_moved**3))
   end
 
   def excess
     mean = @dataset_x.sum.to_f / @count
     std_moved = Math.sqrt(@dataset_x.sum { |value| (value - mean)**2 }.to_f / @count)
     excess_moved = (@dataset_x.sum { |value| (value - mean)**4 }.to_f / @count / (std_moved**4)) - 3
-    excess = ((@count**2).pred.to_f / (@count - 2) / (@count - 3)) * (excess_moved + (6.0 / @count.next))
-    # excess_std = Math.sqrt((24 * @count * (@count.pred**2)).to_f / ((@count - 2) * (@count - 3) * (@count + 3) * (@count + 5)))
-    # excess / excess_std
+    ((@count**2).pred.to_f / (@count - 2) / (@count - 3)) * (excess_moved + (6.0 / @count.next))
   end
 
   def correlation_field(x, y) # rubocop:disable Naming/MethodParameterName
@@ -75,7 +77,6 @@ class FoursController < ApplicationController
   # rubocop:disable Layout/LineLength
 
   def global_statistics(values)
-    # count = values.count
     mean = values.sum.to_f / @count
     sorted_values = values.sort
     median = (sorted_values[(sorted_values.size.pred / 2)] + sorted_values[sorted_values.size / 2]).to_f / 2
@@ -219,7 +220,6 @@ class FoursController < ApplicationController
   end
 
   def corelation_pearson
-    # pearson = pearson(@classes_x, @classes_y)[:value]
     first_part = ((@corelation_relation[:value]**2) - (@pearson[:value]**2)) / (@corelation_relation[:k] - 2)
     last_part = (1 - (@corelation_relation[:value]**2)) / (@count - @corelation_relation[:k])
     first_part / last_part
@@ -276,13 +276,5 @@ class FoursController < ApplicationController
   ensure
     File.delete(filename)
     PLT.clf
-  end
-
-  def classes_gistogram
-    PLT.ylabel = 'p'
-    PLT.xlabel = 'x'
-    m = 1 + (1.44 * Math.log(@count)).round
-    PLT.hist(@dataset_x, bins: m, weights: Array.new(@count) { 1.0 / @count })
-    plot_image
   end
 end

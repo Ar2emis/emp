@@ -1,20 +1,22 @@
 %div
-  %h1 EMP
+  %h1.text-center.bg-dark.text-light.p-4 Лабораторная работа №4
   %div
-    =form_with url: four_path, local: false do |form|
+    =form_with url: four_path, local: false, class: 'w-50 m-auto mt-4 border border-4 rounded p-4' do |form|
       %div
         %div
-          =form.label :data_label, 'Select txt-file:'
+          =form.label :data_label, 'Файл:', class: 'form-label'
         %div
-          =form.file_field :data
+          =form.file_field :data, class: 'form-control'
       %div
         %div
-          =form.label :part_label, 'Choose part'
+          =form.label :part_label, 'Многомерные данные:', class: 'form-label'
         %div
-          =form.radio_button :part, 'first'
-          =form.label :part_first, 'First'
-          =form.radio_button :part, 'second'
-          =form.label :part_second, 'Second'
+          .form-check
+            =form.radio_button :part, 'first', class: 'form-check-input', checked: true
+            =form.label :part_second, 'Нет', class: 'form-label'
+          .form-check
+            =form.radio_button :part, 'second', class: 'form-check-input'
+            =form.label :part_second, 'Да', class: 'form-label'
       %div
-        =form.submit
+        =form.submit 'Отправить', class: 'btn btn-primary'
   %div#output
