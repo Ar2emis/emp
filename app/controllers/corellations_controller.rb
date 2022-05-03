@@ -44,8 +44,8 @@ class CorellationsController < ApplicationController
 
         @df_y = @df[jndex].to_a
         @correlation_fields << correlation_field_plot(index.next, jndex.next)
-        @corelation_relation = corelation_relation
-        @corelation_relation[:statistic].abs > @corelation_relation[:quantile] ? @corelation_relation : { value: 0 }
+        @spirmen_relation = spirmen(@df[index], @df[jndex])
+        @spirmen_relation[:statistic].abs > @spirmen_relation[:quantile] ? @spirmen_relation : { value: 0 }
       end
     end
   end
@@ -108,22 +108,19 @@ class CorellationsController < ApplicationController
       quantile: U }
   end
 
-  def spirmen
-    ranks_x = ranks(@df[0])
-    ranks_y = ranks(@df[1])
+  def spirmen(df_x = @df[0], df_y = @df[1])
+    ranks_x = ranks(df_x)
+    ranks_y = ranks(df_y)
     ranks_different = ranks_x.map.with_index { |rank, index| (rank - ranks_y[index])**2 }.sum.to_f
     nn2_1 = (@count * ((@count**2) - 1)).to_f # rubocop:disable Naming/VariableNumber
-    r = if ranks_x.uniq.count == @count && ranks_y.uniq.count == @count # !!!
-          1 - ((6.0 / nn2_1) * ranks_different)
-        else
-          eq_x = equal_ranks(ranks_x)
-          eq_y = equal_ranks(ranks_y)
-          a = eq_x.sum { |_, aj| (aj**3) - aj }.to_f / 12
-          b = eq_y.sum { |_, bk| (bk**3) - bk }.to_f / 12
-          ((nn2_1 / 6) - ranks_different - a - b) / Math.sqrt(((nn2_1 / 6) - (2 * a)) * ((nn2_1 / 6) - (2 * b)))
-        end
+    eq_x = equal_ranks(ranks_x)
+    eq_y = equal_ranks(ranks_y)
+    a = eq_x.sum { |_, aj| (aj**3) - aj }.to_f / 12
+    b = eq_y.sum { |_, bk| (bk**3) - bk }.to_f / 12
+    r = ((nn2_1 / 6) - ranks_different - a - b) / Math.sqrt(((nn2_1 / 6) - (2 * a)) * ((nn2_1 / 6) - (2 * b)))
     t = (r * Math.sqrt(@count - 2)) / Math.sqrt(1 - (r**2))
     { value: r,
+      scipy: SciPy.stats.spearmanr(@df[0], @df[1]).correlation,
       statistic: t,
       quantile: U }
   end
@@ -135,38 +132,25 @@ class CorellationsController < ApplicationController
     ranks_x = ranks.map(&:first)
     ranks_y = ranks.map(&:last)
     nn_1_2 = (@count * @count.pred).to_f / 2 # rubocop:disable Naming/VariableNumber
-    r = if ranks_x.uniq.count == @count && ranks_y.uniq.count == @count
-          s = (0...@count.pred).to_a.sum do |i|
-            ((i.next)...@count).to_a.sum do |j|
-              if ranks_y[i] < ranks_y[j]
-                1
-              elsif ranks_y[i] > ranks_y[j]
-                -1
-              end
-            end
-          end
-          s.to_f / nn_1_2
+    s = (0...@count.pred).to_a.sum do |i|
+      ((i + 1)...@count).to_a.sum do |j|
+        if ranks_y[i] < ranks_y[j] && ranks_x[i] != ranks_x[j]
+          1
+        elsif ranks_y[i] > ranks_y[j] && ranks_x[i] != ranks_x[j]
+          -1
         else
-          s = (0...@count.pred).to_a.sum do |i|
-            ((i + 1)...@count).to_a.sum do |j|
-              if ranks_y[i] < ranks_y[j] && ranks_x[i] != ranks_x[j]
-                1
-              elsif ranks_y[i] > ranks_y[j] && ranks_x[i] != ranks_x[j]
-                -1
-              else
-                0
-              end
-            end
-          end
-          # binding.pry
-          eq_x = equal_ranks(ranks_x)
-          eq_y = equal_ranks(ranks_y)
-          c = eq_x.sum { |_, aj| aj * aj.pred }.to_f / 2
-          d = eq_y.sum { |_, bk| bk * bk.pred }.to_f / 2
-          s.to_f / Math.sqrt((nn_1_2 - c) * (nn_1_2 - d))
+          0
         end
+      end
+    end
+    eq_x = equal_ranks(ranks_x)
+    eq_y = equal_ranks(ranks_y)
+    c = eq_x.sum { |_, aj| aj * aj.pred }.to_f / 2
+    d = eq_y.sum { |_, bk| bk * bk.pred }.to_f / 2
+    r = s.to_f / Math.sqrt((nn_1_2 - c) * (nn_1_2 - d))
     t = (3 * r * Math.sqrt(@count * @count.pred)) / Math.sqrt(2 * ((2 * @count) + 5))
     { value: r,
+      scipy: SciPy.stats.kendalltau(@df[0], @df[1])[0],
       statistic: t,
       quantile: U }
   end
@@ -189,7 +173,10 @@ class CorellationsController < ApplicationController
         end
       end
     end
+    @classes_x = @classes_x.select(&:any?)
     @classes_y = @classes_y.select(&:any?)
+    @new_x = @classes_x.map { |klass| Array.new(klass.count) { |_| klass.sum.to_f / klass.count } }.flatten
+  
     mean_yl = @classes_y.map { |klass| klass.sum.to_f / klass.count }
     mean_y = @classes_y.sum(&:sum).to_f / @count
     s2_mean_y = @classes_y.map.with_index { |klass, index| klass.count * ((mean_yl[index] - mean_y)**2) }.sum.to_f
@@ -203,9 +190,10 @@ class CorellationsController < ApplicationController
   end
 
   def corelation_pearson
-    first_part = ((@corelation_relation[:value]**2) - (@pearson[:value]**2)) / (@corelation_relation[:k] - 2)
+    pearson = pearson(@new_x, @classes_y.flatten)[:value]
+    first_part = ((@corelation_relation[:value]**2) - (pearson**2)) / (@corelation_relation[:k] - 2)
     last_part = (1 - (@corelation_relation[:value]**2)) / (@count - @corelation_relation[:k])
-    first_part / last_part
+    { pearson: pearson, value: first_part / last_part }
   end
 
   def fisher_quantile(k, n)

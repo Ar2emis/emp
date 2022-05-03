@@ -2,18 +2,26 @@
   %div
     %div
       - @correlation_fields.each_slice(7).with_index do |fields, index|
-        -if params[:dimensions].present?
+        - if params[:dimensions].present?
           %h2.text-center.my-4=index.next
         - fields.each do |field|
           %div
             =image_tag field.html_safe, class: 'img-fluid mx-auto d-block mt-4 img-thumbnail border-3'
+      - if params[:dimensions].present?
+        .mt-2.mb-4.ms-4
+          %p Линейная, стохастическая, отрицательная связь в парах: 1-2
+          %p Нелинейная, стохастическая, отрицательная связь в парах: 1-3, 1-4, 1-5, 2-6, 2-7, 2-8
+          %p Линейная, стохастическая, положительная связь в парах: 1-7, 1-8, 3-4, 4-5, 4-7, 5-6, 5-7, 5-8, 6-7
+          %p Нелинейная, стохастическая, положительная связь в парах: 1-6, 2-3, 2-4, 2-5, 3-5, 3-6, 3-7, 3-8, 4-6, 4-8, 6-8
+          %p Нет связи в паре: 7-8
+          %p В данных присутствуют аномалии в 3, 4
   %div
     - @statistics.each do |key, statistics|
       %table.table.table-striped.m-auto.mt-4.w-75.border.text-center
         %thead.table-dark
           %tr
             %th=key
-            %th Значеніе
+            %th Значение
             %th СКО
             %th 95%
         %tbody
@@ -49,6 +57,7 @@
             %tr
               %th Коэффициент Корреляции
               %th Оценка
+              %th SciPy
               %th 95%
               %th Статистика
               %th Квантиль
@@ -58,6 +67,7 @@
             %tr
               %th Пирсона
               %th=@pearson[:value]
+              %th -
               %th="[#{@pearson[:ninety_five].first.round(2)}; #{@pearson[:ninety_five].last.round(2)}]"
               %th=@pearson[:statistic]
               %th=@pearson[:quantile]
@@ -70,6 +80,7 @@
             %tr
               %th Спирмена
               %th=@spirmen[:value]
+              %th=@spirmen[:scipy]
               %th -
               %th=@spirmen[:statistic]
               %th=@spirmen[:quantile]
@@ -82,6 +93,7 @@
             %tr
               %th Кендалла
               %th=@kendall[:value]
+              %th=@kendall[:scipy]
               %th -
               %th=@kendall[:statistic]
               %th=@kendall[:quantile]
@@ -94,6 +106,7 @@
             %tr
               %th Корреляционное отношение
               %th=@corelation_relation[:value]
+              %th -
               %th -
               %th=@corelation_relation[:statistic]
               %th=@corelation_relation[:quantile]
@@ -116,11 +129,11 @@
                 %th Линейная зависимость
             %tbody
               %tr
-                %th=@pearson[:value]
+                %th=@corelation_pearson[:pearson]
                 %th=@corelation_relation[:value]
-                %th=@corelation_pearson
+                %th=@corelation_pearson[:value]
                 %th=@corelation_relation[:quantile]
-                - if @corelation_pearson <= @corelation_relation[:quantile]
+                - if @corelation_pearson[:value] <= @corelation_relation[:quantile]
                   %th Да
                   %th Да
                 - else
@@ -128,6 +141,7 @@
                   %th Нет
     - else
       %div
+        %h3.text-center.mt-4 Spearman
         %table.table.table-striped.m-auto.mt-4.w-75.border.mb-4.text-center
           %thead.table-dark
             %tr
@@ -140,3 +154,7 @@
                 %td.table-dark=index.next
                 - row.each do |col|
                   %td=col[:value].round(2)
+        .ms-4.my-4
+          %p Пары 2-3, 3-5 имеют модуль коэффициента корреляции близкий к 1 (>= 0.9)
+          %p Показатель 3 сильнее всего коррелирует с показателем 5
+
