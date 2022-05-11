@@ -1,0 +1,80 @@
+%div#dataset
+  %div
+    %table
+      %thead
+        %tr
+          %th
+          %th Estimate
+          %th STD
+          %th 95%
+          %th Statistics
+          %th p-value
+          %th Significance
+      %tbody
+        %tr
+          %th="a#{@dependent_indicator}"
+          %th=@a0
+          %th=@std_a0
+          %th="[#{@a0_interval[:first]}; #{@a0_interval[:last]}]"
+          %th=@a0_stat
+          %th=@p_a0
+          - if @p_a0 >= 0.05
+            %th Insignificant
+          - else
+            %th Significant
+          %tr
+            %th="a#{@independent_indicator}"
+            %th=@a1
+            %th=@std_a1
+            %th="[#{@a1_interval[:first]}; #{@a1_interval[:last]}]"
+            %th=@a1_stat
+            %th=@p_a1
+            - if @p_a0 >= 0.05
+              %th Insignificant
+            - else
+              %th Significant
+    %div
+      %p="Dispersia: #{@se2}"
+      %p="Determination: #{@determination.round(2)}"
+      %p="F-test: #{@f_test}, p-value: #{@p_f_test}"
+      - if @e_assym.abs <= 2.16 && @e_excess.abs <= 2.16
+        %p Normal
+      - else
+        %p Not normal
+    %div
+      =image_tag @correlation_field.html_safe
+  - if params[:part] == 'second'
+    %table
+      %thead
+        %tr
+          %th
+          %th Estimate
+          %th STD
+          %th 95%
+          %th Statistics
+          %th p-value
+          %th Significance
+      %tbody
+        - @a_array.each_with_index do |a, i|
+          %tr
+            %th="a#{i}"
+            %th=a
+            %th=@stds[i]
+            %th=@intervals[i]
+            %th=@stats[i]
+            %th=@ps[i]
+            - if @ps[i] >= 0.05
+              %th Insignificant
+            - else
+              %th Significant
+    %div
+      %p="Dispersia: #{@dispersia}"
+      %p="Determination: #{@determination}"
+      %p="F-test: #{@f}, p-value: #{@p_f}"
+      %p="Assym stat: #{@e_assym}, excess stat: #{@e_excess}"
+      - if @e_assym.abs <= 2.16 && @e_excess.abs <= 2.16
+        %p Normal
+      - else
+        %p Not normal
+    %div
+      =image_tag @diagram.html_safe

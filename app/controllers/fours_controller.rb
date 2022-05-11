@@ -7,8 +7,11 @@ class FoursController < ApplicationController
   def index; end
 
   def create
-    @dataset = Pandas.read_csv(emp_params[:data].path, header: nil)
-    @dataset_values = @dataset.values.to_a.flatten.map { |s| s.gsub("\t\"", '   ').delete('\"').split(/ {2,}/) }
+    @dataset_values = Pandas.read_csv(emp_params[:data].path, header: nil, sep: '\s+').values.to_a
+    # @dataset_values = @dataset.values.to_a.flatten.map { |s| s.gsub("\t\"", '   ').delete('\"').split(/ {2,}/) }
+    nan = @dataset_values.map { |arr| arr.select { |x| x == '?' } }
+    indexes = nan.map.with_index { |x, i| i if x == ['?'] }.compact
+    indexes.each { |i| @dataset_values.delete_at(i) }
     @column_count = @dataset_values.first.count
     @count = @dataset_values.count
     @correlation_fields = []
@@ -27,7 +30,7 @@ class FoursController < ApplicationController
     @spirmen = spirmen
     @kendall = kendall
     @corelation_relation = corelation_relation
-    @corelation_pearson = @spirmen[:statistic].abs > @spirmen[:quantile] ? corelation_pearson : nil
+    @corelation_pearson = @corelation_relation[:statistic].abs > @corelation_relation[:quantile] ? corelation_pearson : nil
   end
 
   def second
@@ -41,7 +44,11 @@ class FoursController < ApplicationController
         @dataset_y = @dataset_values.map { |arr| arr[j].to_f }
         @correlation_fields << correlation_field(i.next, j.next)
         # @matrix[i][j] = send(%w[spirmen kendall corelation_relation].sample)
-        @matrix[i][j] = i == j ? { value: 1.0 } : corelation_relation
+        @matrix[i][j] = if i == j then { value: 1.0 }
+                        else
+                          corelation = corelation_relation
+                          corelation[:statistic].abs > corelation[:quantile] ? corelation : { value: 0.0 }
+                        end
       end
       @assymetries << assymetry
       @excesses << excess
@@ -205,7 +212,9 @@ class FoursController < ApplicationController
         end
       end
     end
+    @classes_x = @classes_x.select(&:any?)
     @classes_y = @classes_y.select(&:any?)
+    @new_x = @classes_x.map { |klass| Array.new(klass.count) { |_| klass.sum.to_f / klass.count } }.flatten
     mean_yl = @classes_y.map { |klass| klass.sum.to_f / klass.count }
     mean_y = @classes_y.sum(&:sum).to_f / @count
     s2_mean_y = @classes_y.map.with_index { |klass, index| klass.count * ((mean_yl[index] - mean_y)**2) }.sum.to_f
@@ -219,10 +228,11 @@ class FoursController < ApplicationController
   end
 
   def corelation_pearson
-    # pearson = pearson(@classes_x, @classes_y)[:value]
-    first_part = ((@corelation_relation[:value]**2) - (@pearson[:value]**2)) / (@corelation_relation[:k] - 2)
+    pearson = pearson(@new_x, @classes_y.flatten)[:value]
+    first_part = ((@corelation_relation[:value]**2) - (pearson**2)) / (@corelation_relation[:k] - 2)
     last_part = (1 - (@corelation_relation[:value]**2)) / (@count - @corelation_relation[:k])
-    first_part / last_part
+    { pearson: pearson,
+      value: first_part / last_part }
   end
 
   def fisher_quantile(k, n)

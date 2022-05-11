@@ -1,0 +1,31 @@
+%div
+  %h1 EMP
+  %div
+    =form_with url: five_path, local: false do |form|
+      %div
+        %div
+          =form.label :data_label, 'Select file:'
+        %div
+          =form.file_field :data
+      %div
+        %div
+          =form.label :dependent_indicator_label, 'Choose dependent indicator'
+        %div
+          =form.number_field :dependent_indicator, step: :any
+      %div
+        %div
+          =form.label :independent_indicator_label, 'Choose independent indicator'
+        %div
+          =form.number_field :independent_indicator, step: :any
+      %div
+        %div
+          =form.label :part_label, 'Choose part'
+        %div
+          =form.radio_button :part, 'first'
+          =form.label :part_first, 'First'
+          =form.radio_button :part, 'second'
+          =form.label :part_second, 'Second'
+
+      %div
+        =form.submit
+  %div#output
